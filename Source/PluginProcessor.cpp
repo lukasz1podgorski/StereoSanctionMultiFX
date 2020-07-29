@@ -105,6 +105,11 @@ void StereoSanctionAudioProcessor::prepareToPlay (double sampleRate, int samples
     leftPostLPF.reset();
     rightPostLPF.reset();
     ringLPF.reset();
+    fuzzOver.reset();
+    fuzzUnder.reset();
+    fuzzLPF1.reset();
+    fuzzLPF2.reset();
+
 
     time = 0.0f;
     dTime = 1.0f / sampleRate;
@@ -235,16 +240,22 @@ float StereoSanctionAudioProcessor::fuzz(float signal)
 {
     float wetSignal;
 
-    if (signal > 0)
+    float sigOver = fuzzOver.processSample(signal);
+    float siglpf1 = fuzzLPF1.processSample(signal);
+
+    if (siglpf1 > 0)
     {
-        wetSignal = 1.0f - exp(smoothedFuzzGain.getNextValue() * (-signal));
+        wetSignal = 1.0f - exp(smoothedFuzzGain.getNextValue() * (-siglpf1));
     }
     else
     {
-        wetSignal = -1.0f + exp(smoothedFuzzGain.getNextValue() * signal);
+        wetSignal = -1.0f + exp(smoothedFuzzGain.getNextValue() * siglpf1);
     }
 
-    float fuzzSignal = (1.0f - (fuzzIntensityStep / 100.0f)) * signal + fuzzIntensityStep / 100.f * wetSignal;
+    float siglpf2 = fuzzLPF2.processSample(wetSignal);
+    float sigunder = fuzzUnder.processSample(siglpf2);
+
+    float fuzzSignal = (1.0f - (fuzzIntensityStep / 100.0f)) * signal + fuzzIntensityStep / 100.f * sigunder;
 
     if (smoothedFuzzGain.getNextValue() == 0.0f && fuzzIntensityStep == 100.0f)
     {
@@ -254,6 +265,26 @@ float StereoSanctionAudioProcessor::fuzz(float signal)
     {
         return fuzzSignal;
     }
+
+    //if (signal > 0)
+    //{
+    //    wetSignal = 1.0f - exp(smoothedFuzzGain.getNextValue() * (-signal));
+    //}
+    //else
+    //{
+    //    wetSignal = -1.0f + exp(smoothedFuzzGain.getNextValue() * signal);
+    //}
+
+    //float fuzzSignal = (1.0f - (fuzzIntensityStep / 100.0f)) * signal + fuzzIntensityStep / 100.f * wetSignal;
+
+    //if (smoothedFuzzGain.getNextValue() == 0.0f && fuzzIntensityStep == 100.0f)
+    //{
+    //    return signal;
+    //}
+    //else
+    //{
+    //    return fuzzSignal;
+    //}
 }
 
 void StereoSanctionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
@@ -269,7 +300,19 @@ void StereoSanctionAudioProcessor::processBlock (AudioBuffer<float>& buffer, Mid
     rightLPF.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), 2000.0f);
     leftPostLPF.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), 2500.0f);
     rightPostLPF.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), 2500.0f);
-    ringLPF.coefficients = dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), sharpnessFreqStep, 0.1f);
+    ringLPF.coefficients = dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), sharpnessFreqStep, 0.7f);
+    
+    fuzzOver.coefficients = dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate()*2.0, 4000.0f, 0.7f);
+    fuzzUnder.coefficients = dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), 4000.0f, 0.7f);
+    fuzzLPF1.coefficients = dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate()*2.0, 4000.0f, 0.7f);
+    fuzzLPF2.coefficients = dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate()*2.0, 4000.0f, 0.7f);
+    //fuzzOver.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate() * 2.0, 4000.0f);
+    //fuzzUnder.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), 4000.0f);
+    //fuzzLPF1.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate() * 2.0, 4000.0f);
+    //fuzzLPF2.coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), 4000.0f);
+
+
+
     //LPF.state->coefficients = dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), 2000.0f);
     
     smoothedRingModFreq.setValue(ringModFreqStep);
@@ -322,7 +365,7 @@ void StereoSanctionAudioProcessor::processBlock (AudioBuffer<float>& buffer, Mid
             //write to Circular Buffer with Fractional Delay
             leftCircBuff.setSample(leftChannel);
             rightCircBuff.setSample(rightChannel);
-       
+                       
             //apply Fuzz
             float leftFuzz = fuzz(wetLeft);
             float rightFuzz = fuzz(wetRight);

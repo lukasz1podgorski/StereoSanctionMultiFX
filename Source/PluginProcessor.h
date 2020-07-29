@@ -86,7 +86,7 @@ private:
     FracDelayLine rightCircBuff;
     float delayTimeL;
     float delayTimeR;
-    dsp::IIR::Filter<float> leftLPF, rightLPF, leftPostLPF, rightPostLPF, ringLPF;
+    dsp::IIR::Filter<float> leftLPF, rightLPF, leftPostLPF, rightPostLPF, ringLPF, fuzzOver, fuzzUnder, fuzzLPF1, fuzzLPF2;
     LinearSmoothedValue<float> smoothedRingModFreq, smoothedModDelayTime, smoothedModDelayWidth, smoothedModFreq,
         smoothedModDepth, smoothedRingIntensity, smoothedFuzzGain, smoothedPanShift;
     dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> LPF;

@@ -186,7 +186,7 @@ StereoSanctionAudioProcessorEditor::StereoSanctionAudioProcessorEditor (StereoSa
     ringWaveSlider.addListener(this);
 
     fuzzGainSlider.setSliderStyle(Slider::Rotary);
-    fuzzGainSlider.setRange(0.0, 1.0, 0.01);
+    fuzzGainSlider.setRange(0.0, 10.0, 0.1);
     fuzzGainSlider.setTextBoxStyle(Slider::NoTextBox, false, 90, 0);
     fuzzGainSlider.setPopupDisplayEnabled(true, true, this);
     fuzzGainSlider.setTextValueSuffix(" Gain");
@@ -231,11 +231,11 @@ StereoSanctionAudioProcessorEditor::StereoSanctionAudioProcessorEditor (StereoSa
     panShiftSlider.addListener(this);
 
     sharpnessFreqSlider.setSliderStyle(Slider::Rotary);
-    sharpnessFreqSlider.setRange(5000.0, 20000.0, 1.0);
+    sharpnessFreqSlider.setRange(1000.0, 20000.0, 1.0);
     sharpnessFreqSlider.setTextBoxStyle(Slider::NoTextBox, false, 90, 0);
     sharpnessFreqSlider.setPopupDisplayEnabled(true, true, this);
     sharpnessFreqSlider.setTextValueSuffix(" Hz");
-    sharpnessFreqSlider.setValue(12500.0); addAndMakeVisible(&sharpnessFreqSlider);
+    sharpnessFreqSlider.setValue(5000.0); addAndMakeVisible(&sharpnessFreqSlider);
     sharpnessFreqSlider.setColour(Slider::thumbColourId, Colours::lightseagreen);
     sharpnessFreqSlider.setColour(Slider::rotarySliderFillColourId, Colours::lightseagreen);
     sharpnessFreqSlider.setColour(Slider::rotarySliderOutlineColourId, Colours::ghostwhite);
